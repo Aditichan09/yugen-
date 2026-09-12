@@ -88,7 +88,10 @@ function AmbientAudioToggle() {
     if (isPlaying) {
       oscillatorsRef.current.forEach((osc) => osc.stop());
       oscillatorsRef.current = [];
-      if (audioCtxRef.current) { audioCtxRef.current.close(); audioCtxRef.current = null; }
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close();
+        audioCtxRef.current = null;
+      }
       setIsPlaying(false);
     } else {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -116,8 +119,25 @@ function AmbientAudioToggle() {
     }
   };
   return (
-    <button onClick={toggleAmbient} title={isPlaying ? 'Mute ambient lounge sound' : 'Enable soft ambient lounge sound'}
-      style={{ fontSize: '12px', color: isPlaying ? colors.accent : colors.textMuted, padding: '6px 14px', borderRadius: '20px', border: `1px solid ${isPlaying ? colors.glassBorderStrong : colors.glassBorder}`, background: isPlaying ? 'rgba(56, 189, 248, 0.1)' : colors.glass, backdropFilter: 'blur(12px)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', fontFamily: fontStack, transition: 'all 0.2s ease' }}>
+    <button
+      onClick={toggleAmbient}
+      title={isPlaying ? 'Mute ambient lounge sound' : 'Enable soft ambient lounge sound'}
+      style={{
+        fontSize: '12px',
+        color: isPlaying ? colors.accent : colors.textMuted,
+        padding: '6px 14px',
+        borderRadius: '20px',
+        border: `1px solid ${isPlaying ? colors.glassBorderStrong : colors.glassBorder}`,
+        background: isPlaying ? 'rgba(56, 189, 248, 0.1)' : colors.glass,
+        backdropFilter: 'blur(12px)',
+        cursor: 'pointer',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        fontFamily: fontStack,
+        transition: 'all 0.2s ease',
+      }}
+    >
       {isPlaying ? '🎧 Ambient Lounge: ON' : '🔈 Ambient Lounge: OFF'}
     </button>
   );
@@ -140,34 +160,35 @@ export default function Home() {
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
-  // Load saved history from this browser once, on first load
   useEffect(() => {
     try {
       const saved = localStorage.getItem('yugen-history');
       if (saved) setHistory(JSON.parse(saved));
     } catch (e) {
-      // If localStorage is unavailable or corrupted, just start empty — never crash the page over this
+      // ignore corrupted/unavailable storage
     }
     setHistoryLoaded(true);
   }, []);
 
-  // Save history to this browser every time it changes, so it survives closing the tab
   useEffect(() => {
-    if (!historyLoaded) return; // don't overwrite saved history with the initial empty state
+    if (!historyLoaded) return;
     try {
       localStorage.setItem('yugen-history', JSON.stringify(history));
     } catch (e) {
-      // Storage full or unavailable — fail silently rather than breaking the app
+      // ignore storage errors
     }
   }, [history, historyLoaded]);
-  const [showHistory, setShowHistory] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
 
   const isEnToJa = direction === 'EN_TO_JA';
 
   const handleTTS = (textToSpeak: string, langCode: string) => {
-    if (!('speechSynthesis' in window)) { alert('Text-to-speech is not supported by your browser.'); return; }
+    if (!('speechSynthesis' in window)) {
+      alert('Text-to-speech is not supported by your browser.');
+      return;
+    }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
     utterance.lang = langCode;
@@ -203,10 +224,9 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Translation failed.');
       setOutput(data.result);
-      setHistory((prev) => [
-        { id: Date.now(), direction, inputText: prompt, output: data.result, timestamp: new Date().toLocaleTimeString() },
-        ...prev,
-      ].slice(0, 8));
+      setHistory((prev) =>
+        [{ id: Date.now(), direction, inputText: prompt, output: data.result, timestamp: new Date().toLocaleTimeString() }, ...prev].slice(0, 8)
+      );
     } catch (err: any) {
       setError(err.message || 'Something went wrong.');
     } finally {
@@ -223,8 +243,14 @@ export default function Home() {
 
   const outputBlocks = output ? parseOutput(output, direction) : [];
   const selectStyle: React.CSSProperties = {
-    width: '100%', background: 'rgba(10, 15, 30, 0.6)', border: `1px solid ${colors.glassBorder}`,
-    borderRadius: '8px', padding: '10px', color: colors.textMain, fontFamily: fontStack, fontSize: '14px',
+    width: '100%',
+    background: 'rgba(10, 15, 30, 0.6)',
+    border: `1px solid ${colors.glassBorder}`,
+    borderRadius: '8px',
+    padding: '10px',
+    color: colors.textMain,
+    fontFamily: fontStack,
+    fontSize: '14px',
   };
 
   return (
@@ -237,13 +263,42 @@ export default function Home() {
             YUGEN <span style={{ color: colors.accent, fontSize: '14px', fontWeight: 400 }}>// Executive JP-EN Suite</span>
           </h1>
           <div style={{ display: 'flex', gap: space.xs, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => setShowHistory(!showHistory)} style={{ fontSize: '12px', color: showHistory ? colors.accent : colors.textMuted, padding: '6px 14px', borderRadius: '20px', border: `1px solid ${showHistory ? colors.glassBorderStrong : colors.glassBorder}`, background: colors.glass, backdropFilter: 'blur(12px)', cursor: 'pointer', fontFamily: fontStack }}>
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              style={{ fontSize: '12px', color: showHistory ? colors.accent : colors.textMuted, padding: '6px 14px', borderRadius: '20px', border: `1px solid ${showHistory ? colors.glassBorderStrong : colors.glassBorder}`, background: colors.glass, backdropFilter: 'blur(12px)', cursor: 'pointer', fontFamily: fontStack }}
+            >
               🕐 History ({history.length})
             </button>
             <AmbientAudioToggle />
             <span style={{ fontSize: '12px', color: colors.accent, padding: '6px 14px', borderRadius: '20px', border: `1px solid ${colors.glassBorderStrong}`, background: colors.glass, backdropFilter: 'blur(12px)', whiteSpace: 'nowrap' }}>
               🔒 Encrypted & enterprise secure
             </span>
+          </div>
+        </div>
+
+        <div style={{ ...glassPanel, padding: space.md, marginBottom: space.md, borderLeft: `3px solid ${colors.accent}` }}>
+          <h2 style={{ fontSize: '13px', color: colors.accent, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 0, marginBottom: space.sm }}>
+            Why Yugen, not a generic translator
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: space.sm }}>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: colors.textMain, marginBottom: '4px' }}>Hierarchy-aware</div>
+              <div style={{ fontSize: '12px', color: colors.textMuted, lineHeight: 1.5 }}>
+                Knows the difference between writing to a peer versus a C-suite executive — generic translators don't.
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: colors.textMain, marginBottom: '4px' }}>Verifiable, not a black box</div>
+              <div style={{ fontSize: '12px', color: colors.textMuted, lineHeight: 1.5 }}>
+                Every translation includes a literal meaning check and a confidence rating, so you can verify it yourself before sending.
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: colors.textMain, marginBottom: '4px' }}>Intent-shaped</div>
+              <div style={{ fontSize: '12px', color: colors.textMuted, lineHeight: 1.5 }}>
+                Declining an offer and opening a negotiation require different tone entirely — Yugen adjusts for that automatically.
+              </div>
+            </div>
           </div>
         </div>
 
@@ -278,26 +333,21 @@ export default function Home() {
         )}
 
         <div style={{ display: 'flex', gap: space.xs, marginBottom: space.md }}>
-          <button onClick={() => setDirection('EN_TO_JA')} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: `1px solid ${direction === 'EN_TO_JA' ? colors.accent : colors.glassBorder}`, background: direction === 'EN_TO_JA' ? 'rgba(56, 189, 248, 0.1)' : colors.glass, color: direction === 'EN_TO_JA' ? colors.accent : colors.textMuted, fontWeight: 600, cursor: 'pointer', fontFamily: fontStack }}>
+          <button
+            onClick={() => setDirection('EN_TO_JA')}
+            style={{ flex: 1, padding: '12px', borderRadius: '12px', border: `1px solid ${direction === 'EN_TO_JA' ? colors.accent : colors.glassBorder}`, background: direction === 'EN_TO_JA' ? 'rgba(56, 189, 248, 0.1)' : colors.glass, color: direction === 'EN_TO_JA' ? colors.accent : colors.textMuted, fontWeight: 600, cursor: 'pointer', fontFamily: fontStack }}
+          >
             English ➔ Japanese Business
           </button>
-          <button onClick={() => setDirection('JA_TO_EN')} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: `1px solid ${direction === 'JA_TO_EN' ? colors.accent : colors.glassBorder}`, background: direction === 'JA_TO_EN' ? 'rgba(56, 189, 248, 0.1)' : colors.glass, color: direction === 'JA_TO_EN' ? colors.accent : colors.textMuted, fontWeight: 600, cursor: 'pointer', fontFamily: fontStack }}>
+          <button
+            onClick={() => setDirection('JA_TO_EN')}
+            style={{ flex: 1, padding: '12px', borderRadius: '12px', border: `1px solid ${direction === 'JA_TO_EN' ? colors.accent : colors.glassBorder}`, background: direction === 'JA_TO_EN' ? 'rgba(56, 189, 248, 0.1)' : colors.glass, color: direction === 'JA_TO_EN' ? colors.accent : colors.textMuted, fontWeight: 600, cursor: 'pointer', fontFamily: fontStack }}
+          >
             Japanese ➔ Executive English
           </button>
         </div>
 
         <div style={{ ...glassPanel, padding: space.md }}>
-          <div style={{ marginBottom: space.md }}>
-            <label style={{ display: 'block', fontSize: '13px', color: colors.textMuted, marginBottom: space.xs }}>
-              {isEnToJa ? 'English Draft Input' : 'Japanese Text Input'}
-            </label>
-            <textarea rows={4} value={prompt} onChange={(e) => setPrompt(e.target.value)}
-              placeholder={isEnToJa ? 'Enter message to convert into formal business Japanese...' : 'Enter Japanese corporate text to decode...'}
-              style={{ width: '100%', background: 'rgba(5, 11, 24, 0.7)', border: `1px solid ${colors.glassBorder}`, borderRadius: '10px', padding: '12px', color: colors.white, fontFamily: fontStack, fontSize: '14px', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          {/* Settings toggle now sits above the button */}
           <button
             onClick={() => setShowSettings(!showSettings)}
             style={{ width: '100%', background: 'transparent', border: 'none', color: colors.textFaint, fontSize: '12px', cursor: 'pointer', fontFamily: fontStack, padding: '4px 0', textAlign: 'center', marginBottom: space.sm }}
@@ -306,7 +356,7 @@ export default function Home() {
           </button>
 
           {showSettings && (
-            <div>
+            <div style={{ marginBottom: space.md }}>
               <div style={{ marginBottom: space.sm }}>
                 <label style={{ display: 'block', fontSize: '12px', color: colors.textFaint, marginBottom: '4px' }}>Communication Intent</label>
                 <select value={intent} onChange={(e) => setIntent(e.target.value)} style={selectStyle}>
@@ -369,15 +419,35 @@ export default function Home() {
 
               <div>
                 <label style={{ display: 'block', fontSize: '12px', color: colors.textFaint, marginBottom: '4px' }}>Brand & Term Glossary (optional)</label>
-                <input type="text" value={glossary} onChange={(e) => setGlossary(e.target.value)} placeholder="e.g. Project Apex -> プロジェクト・エイペックス"
+                <input
+                  type="text"
+                  value={glossary}
+                  onChange={(e) => setGlossary(e.target.value)}
+                  placeholder="e.g. Project Apex -> プロジェクト・エイペックス"
                   style={{ width: '100%', background: 'rgba(10, 15, 30, 0.6)', border: `1px solid ${colors.glassBorder}`, borderRadius: '8px', padding: '10px', color: colors.textMain, fontFamily: fontStack, fontSize: '13px', boxSizing: 'border-box' }}
                 />
               </div>
             </div>
           )}
 
-          <button onClick={handleTranslate} disabled={loading}
-            style={{ width: '100%', padding: '14px', borderRadius: '10px', border: 'none', background: loading ? colors.textFaint : colors.accent, color: '#001018', fontWeight: 700, fontSize: '14px', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: fontStack, transition: 'opacity 0.2s' }}>
+          <div style={{ marginBottom: space.md }}>
+            <label style={{ display: 'block', fontSize: '13px', color: colors.textMuted, marginBottom: space.xs }}>
+              {isEnToJa ? 'English Draft Input' : 'Japanese Text Input'}
+            </label>
+            <textarea
+              rows={4}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder={isEnToJa ? 'Enter message to convert into formal business Japanese...' : 'Enter Japanese corporate text to decode...'}
+              style={{ width: '100%', background: 'rgba(5, 11, 24, 0.7)', border: `1px solid ${colors.glassBorder}`, borderRadius: '10px', padding: '12px', color: colors.white, fontFamily: fontStack, fontSize: '14px', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <button
+            onClick={handleTranslate}
+            disabled={loading}
+            style={{ width: '100%', padding: '14px', borderRadius: '10px', border: 'none', background: loading ? colors.textFaint : colors.accent, color: '#001018', fontWeight: 700, fontSize: '14px', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: fontStack, transition: 'opacity 0.2s' }}
+          >
             {loading ? 'Processing translation...' : 'Execute Professional Translation'}
           </button>
         </div>
@@ -400,7 +470,9 @@ export default function Home() {
                     </h3>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       {block.speak && (
-                        <button onClick={() => handleTTS(block.content, isEnToJa ? 'ja-JP' : 'en-US')} style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.glassBorder}`, color: colors.white, padding: '4px 10px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>▶ Listen</button>
+                        <button onClick={() => handleTTS(block.content, isEnToJa ? 'ja-JP' : 'en-US')} style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.glassBorder}`, color: colors.white, padding: '4px 10px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
+                          ▶ Listen
+                        </button>
                       )}
                       {block.speak && (
                         <button onClick={() => handleCopyForEmail(block.content)} style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.glassBorder}`, color: colors.white, padding: '4px 10px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
@@ -424,7 +496,7 @@ export default function Home() {
                 ⚠️ AI-generated translation. Not a certified legal translation. Review before use in contracts.
               </p>
               <a href={`mailto:aditimandiya11@gmail.com?subject=Translation Review Request&body=${encodeURIComponent(output)}`} style={{ fontSize: '12px', color: colors.accent, textDecoration: 'underline' }}>
-                Request human review of this translation
+                Email the founder directly for a second look (early-stage — replies aren't instant)
               </a>
             </div>
           </div>
