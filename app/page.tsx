@@ -143,6 +143,41 @@ function AmbientAudioToggle() {
   );
 }
 
+const QUICK_TEMPLATES: { label: string; intent: string; text: { EN_TO_JA: string; JA_TO_EN: string } }[] = [
+  {
+    label: '📅 Schedule a meeting',
+    intent: 'Scheduling a Meeting',
+    text: {
+      EN_TO_JA: 'Would it be possible to schedule a meeting sometime next week to discuss this further?',
+      JA_TO_EN: '来週、この件についてお打ち合わせのお時間をいただけますでしょうか。',
+    },
+  },
+  {
+    label: '🔄 Follow up',
+    intent: 'Follow-up',
+    text: {
+      EN_TO_JA: 'I wanted to follow up on my previous message regarding the proposal. Please let me know if you have any updates.',
+      JA_TO_EN: '先日ご送付いたしましたご提案について、その後いかがでしょうか。',
+    },
+  },
+  {
+    label: '🙏 Decline politely',
+    intent: 'Declining an Offer',
+    text: {
+      EN_TO_JA: 'Thank you for the offer, but unfortunately we are unable to move forward with this at this time.',
+      JA_TO_EN: 'ご提案いただき誠にありがとうございます。誠に恐縮ではございますが、今回は見送らせていただきたく存じます。',
+    },
+  },
+  {
+    label: '😔 Apologize for a delay',
+    intent: 'Apology',
+    text: {
+      EN_TO_JA: 'I sincerely apologize for the delay in my response. Please allow me to provide an update as soon as possible.',
+      JA_TO_EN: 'ご連絡が遅くなり誠に申し訳ございません。早急にご報告いたします。',
+    },
+  },
+];
+
 export default function Home() {
   const [direction, setDirection] = useState<Direction>('EN_TO_JA');
   const [prompt, setPrompt] = useState('');
@@ -161,7 +196,6 @@ export default function Home() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     try {
@@ -348,14 +382,11 @@ export default function Home() {
         </div>
 
         <div style={{ ...glassPanel, padding: space.md }}>
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            style={{ width: '100%', background: 'transparent', border: 'none', color: colors.textFaint, fontSize: '12px', cursor: 'pointer', fontFamily: fontStack, padding: '4px 0', textAlign: 'center', marginBottom: space.sm }}
-          >
-            {showSettings ? '▲ Hide translation settings' : '▼ Show translation settings (Intent, Role, Glossary...)'}
-          </button>
+          <label style={{ display: 'block', fontSize: '11px', color: colors.textFaint, marginBottom: space.sm, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Translation Settings
+          </label>
 
-          {showSettings && (
+          {(
             <div style={{ marginBottom: space.md }}>
               <div style={{ marginBottom: space.sm }}>
                 <label style={{ display: 'block', fontSize: '12px', color: colors.textFaint, marginBottom: '4px' }}>Communication Intent</label>
@@ -429,6 +460,35 @@ export default function Home() {
               </div>
             </div>
           )}
+
+          <div style={{ marginBottom: space.sm }}>
+            <label style={{ display: 'block', fontSize: '11px', color: colors.textFaint, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Quick-Start Templates
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {QUICK_TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.label}
+                  onClick={() => {
+                    setPrompt(isEnToJa ? tpl.text.EN_TO_JA : tpl.text.JA_TO_EN);
+                    setIntent(tpl.intent);
+                  }}
+                  style={{
+                    fontSize: '12px',
+                    color: colors.textMuted,
+                    background: 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${colors.glassBorder}`,
+                    borderRadius: '20px',
+                    padding: '6px 12px',
+                    cursor: 'pointer',
+                    fontFamily: fontStack,
+                  }}
+                >
+                  {tpl.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div style={{ marginBottom: space.md }}>
             <label style={{ display: 'block', fontSize: '13px', color: colors.textMuted, marginBottom: space.xs }}>
